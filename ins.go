@@ -8,13 +8,13 @@ import (
 	"time"
 )
 
-func New() *instance {
-	return &instance{
+func New() *Ins {
+	return &Ins{
 		buckets: [16]bucket{},
 	}
 }
 
-type instance struct {
+type Ins struct {
 	buckets [16]bucket
 }
 
@@ -29,7 +29,7 @@ type item struct {
 }
 
 // set key value
-func (i *instance) Set(key string, value interface{}) error {
+func (i *Ins) Set(key string, value interface{}) error {
 	p := i.partition(key)
 	i.buckets[p].Lock()
 	defer i.buckets[p].Unlock()
@@ -37,7 +37,7 @@ func (i *instance) Set(key string, value interface{}) error {
 	return nil
 }
 
-func (i *instance) SetNx(key string, val interface{}) error {
+func (i *Ins) SetNx(key string, val interface{}) error {
 	p := i.partition(key)
 	i.buckets[p].Lock()
 	defer i.buckets[p].Unlock()
@@ -49,7 +49,7 @@ func (i *instance) SetNx(key string, val interface{}) error {
 	return nil
 }
 
-func (i *instance) SetNxEx(key string, val interface{}, exp int64) error {
+func (i *Ins) SetNxEx(key string, val interface{}, exp int64) error {
 	p := i.partition(key)
 	i.buckets[p].Lock()
 	defer i.buckets[p].Unlock()
@@ -61,7 +61,7 @@ func (i *instance) SetNxEx(key string, val interface{}, exp int64) error {
 	return nil
 }
 
-func (i *instance) SetEx(key string, val interface{}, exp int64) error {
+func (i *Ins) SetEx(key string, val interface{}, exp int64) error {
 	p := i.partition(key)
 	i.buckets[p].Lock()
 	defer i.buckets[p].Unlock()
@@ -69,7 +69,7 @@ func (i *instance) SetEx(key string, val interface{}, exp int64) error {
 	return nil
 }
 
-func (i *instance) set(partition int, key string, val item) {
+func (i *Ins) set(partition int, key string, val item) {
 	if i.buckets[partition].db == nil {
 		i.buckets[partition].db = make(map[string]item)
 	}
@@ -77,7 +77,7 @@ func (i *instance) set(partition int, key string, val item) {
 }
 
 // return nil,false if key not found
-func (i *instance) Get(key string) (interface{}, bool) {
+func (i *Ins) Get(key string) (interface{}, bool) {
 	p := i.partition(key)
 	val, ok := i.get(p, key)
 	if ok {
@@ -89,7 +89,7 @@ func (i *instance) Get(key string) (interface{}, bool) {
 	return val.value, ok
 }
 
-func (i *instance) get(partition int, key string) (item, bool) {
+func (i *Ins) get(partition int, key string) (item, bool) {
 	if i.buckets[partition].db == nil {
 		return item{}, false
 	}
@@ -97,18 +97,18 @@ func (i *instance) get(partition int, key string) (item, bool) {
 	return val, ok
 }
 
-func (i *instance) Del(key string) error {
+func (i *Ins) Del(key string) error {
 	p := i.partition(key)
 	return i.del(p, key)
 }
 
-func (i *instance) del(partition int, key string) error {
+func (i *Ins) del(partition int, key string) error {
 	i.buckets[partition].Lock()
 	defer i.buckets[partition].Unlock()
 	delete(i.buckets[partition].db, key)
 	return nil
 }
 
-func (i *instance) partition(key string) int {
+func (i *Ins) partition(key string) int {
 	return int(math.Mod(float64(crc32.ChecksumIEEE([]byte(key))), 16))
 }
