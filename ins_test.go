@@ -93,6 +93,17 @@ func TestSetNxEx(t *testing.T) {
 		t.Errorf("val want %v, got %v; ok want %v, got %v", nil, val, false, ok)
 		return
 	}
+
+	if err := i.SetNxEx("fruit", "watermelon", 2); err != nil {
+		t.Errorf("want nil, got %v", err)
+		return
+	}
+
+	val, ok = i.Get("fruit")
+	if !ok || val != "watermelon" {
+		t.Errorf("val want %v, got %v; ok want %v, got %v", "watermelon", val, true, ok)
+		return
+	}
 }
 
 func TestDel(t *testing.T) {

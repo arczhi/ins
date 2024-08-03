@@ -41,7 +41,10 @@ func (i *Ins) SetNx(key string, val interface{}) error {
 	p := i.partition(key)
 	i.buckets[p].Lock()
 	defer i.buckets[p].Unlock()
-	_, ok := i.get(p, key)
+	dbVal, ok := i.get(p, key)
+	if ok && dbVal.expiredAt != -1 && time.Now().After(time.Unix(dbVal.expiredAt, 0)) {
+		i.del(p, key)
+	}
 	if ok {
 		return errors.New("key exists")
 	}
@@ -57,6 +60,7 @@ func (i *Ins) SetNxEx(key string, val interface{}, exp int64) error {
 	if ok {
 		return errors.New("key exists")
 	}
+
 	i.set(p, key, item{value: val, expiredAt: time.Now().Unix() + exp})
 	return nil
 }
