@@ -126,6 +126,29 @@ func TestDel(t *testing.T) {
 	}
 }
 
+func TestExpire(t *testing.T) {
+	var i = New()
+	if err := i.Set("fruit", "watermelon"); err != nil {
+		t.Error(err)
+		return
+	}
+	if err := i.Expire("fruit", 1); err != nil {
+		t.Error(err)
+		return
+	}
+	val, ok := i.Get("fruit")
+	if !ok || val != "watermelon" {
+
+		t.Errorf("val want %v, got %v; ok want %v, got %v", "watermelon", val, true, ok)
+		return
+	}
+	time.Sleep(1 * time.Second)
+	val, ok = i.Get("fruit")
+	if ok {
+		t.Errorf("val want %v, got %v; ok want %v, got %v", nil, val, false, ok)
+	}
+}
+
 func BenchmarkSet(b *testing.B) {
 	var i = New()
 	for num := 0; num < b.N; num++ {

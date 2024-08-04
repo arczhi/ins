@@ -113,6 +113,19 @@ func (i *Ins) del(partition int, key string) error {
 	return nil
 }
 
+func (i *Ins) Expire(key string, exp int64) error {
+	p := i.partition(key)
+	i.buckets[p].Lock()
+	defer i.buckets[p].Unlock()
+	val, ok := i.get(p, key)
+	if !ok {
+		return nil
+	}
+	val.expiredAt = time.Now().Unix() + exp
+	i.set(p, key, val)
+	return nil
+}
+
 func (i *Ins) partition(key string) int {
 	return int(math.Mod(float64(crc32.ChecksumIEEE([]byte(key))), 16))
 }
